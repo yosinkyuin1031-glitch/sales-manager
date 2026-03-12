@@ -78,6 +78,11 @@ export default function LoginPage() {
               {loading ? 'ログイン中...' : 'ログイン'}
             </button>
           </form>
+
+          <p className="text-center text-sm text-gray-500 mt-4">
+            アカウントをお持ちでない方は{' '}
+            <a href="/signup" className="text-blue-600 font-bold">新規登録</a>
+          </p>
         </div>
       </div>
     </div>

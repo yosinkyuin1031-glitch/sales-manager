@@ -32,14 +32,14 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   // 未ログイン → ログイン画面へ
-  if (!user && !pathname.startsWith('/login')) {
+  if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/signup')) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
   // ログイン済みだが組織未所属 → セットアップ画面へ
-  if (user && !pathname.startsWith('/login') && !pathname.startsWith('/setup')) {
+  if (user && !pathname.startsWith('/login') && !pathname.startsWith('/signup') && !pathname.startsWith('/setup') && !pathname.startsWith('/api/')) {
     const { data: membership } = await supabase
       .from('org_memberships')
       .select('id')
