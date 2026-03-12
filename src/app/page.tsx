@@ -5,10 +5,12 @@ import Link from 'next/link'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
 import { createClient } from '@/lib/supabase/client'
+import { useOrg } from '@/lib/useOrg'
 import type { DailyReport } from '@/lib/types'
 
 export default function HomePage() {
   const supabase = createClient()
+  const { orgName } = useOrg()
   const [todayCount, setTodayCount] = useState(0)
   const [recentReports, setRecentReports] = useState<DailyReport[]>([])
   const [userName, setUserName] = useState('')
@@ -47,7 +49,12 @@ export default function HomePage() {
     <AppShell>
       <Header title="営業管理アプリ" />
       <div className="px-4 py-4 max-w-lg mx-auto">
-        <p className="text-gray-600 mb-4">こんにちは、{userName}さん</p>
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-gray-600">こんにちは、{userName}さん</p>
+          {orgName && (
+            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">{orgName}</span>
+          )}
+        </div>
 
         {/* 今日の訪問数 */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-4">

@@ -8,6 +8,7 @@ const navItems = [
   { href: '/facilities', label: '施設', icon: '🏢' },
   { href: '/reports', label: '日報', icon: '📝' },
   { href: '/routes', label: 'ルート', icon: '🗺️' },
+  { href: '/settings', label: '設定', icon: '⚙️' },
 ]
 
 export default function BottomNav() {

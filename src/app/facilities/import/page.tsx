@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
 import { createClient } from '@/lib/supabase/client'
+import { useOrg } from '@/lib/useOrg'
 import Papa from 'papaparse'
 
 interface CSVRow {
@@ -49,6 +50,7 @@ const COLUMN_MAP: Record<string, string> = {
 export default function ImportPage() {
   const supabase = createClient()
   const router = useRouter()
+  const { orgId } = useOrg()
   const [preview, setPreview] = useState<CSVRow[]>([])
   const [headers, setHeaders] = useState<string[]>([])
   const [importing, setImporting] = useState(false)
@@ -102,6 +104,7 @@ export default function ImportPage() {
                 }
               }
             }
+            mapped.org_id = orgId
             return mapped
           }).filter(m => m.name) // 施設名がないものは除外
 

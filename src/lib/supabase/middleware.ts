@@ -27,15 +27,30 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
+  const pathname = request.nextUrl.pathname
+
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login')
-  ) {
+  // 未ログイン → ログイン画面へ
+  if (!user && !pathname.startsWith('/login')) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
+  }
+
+  // ログイン済みだが組織未所属 → セットアップ画面へ
+  if (user && !pathname.startsWith('/login') && !pathname.startsWith('/setup')) {
+    const { data: membership } = await supabase
+      .from('org_memberships')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!membership) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/setup'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse

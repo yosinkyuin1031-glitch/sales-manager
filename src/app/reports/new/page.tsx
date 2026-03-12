@@ -5,11 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
 import { createClient } from '@/lib/supabase/client'
+import { useOrg } from '@/lib/useOrg'
 import type { Facility } from '@/lib/types'
 
 function NewReportForm() {
   const supabase = createClient()
   const router = useRouter()
+  const { orgId } = useOrg()
   const searchParams = useSearchParams()
   const prefillFacilityId = searchParams.get('facility_id')
 
@@ -71,6 +73,7 @@ function NewReportForm() {
       visit_date: visitDate,
       talk_content: talkContent,
       memo,
+      org_id: orgId,
     })
 
     // 施設の訪問回数と訪問日を更新
