@@ -8,6 +8,9 @@ interface OrgInfo {
   role: 'admin' | 'member' | null
   orgName: string | null
   userId: string | null
+  plan: string | null
+  subscriptionStatus: string | null
+  trialEndsAt: string | null
   loading: boolean
 }
 
@@ -17,6 +20,9 @@ export function useOrg(): OrgInfo {
     role: null,
     orgName: null,
     userId: null,
+    plan: null,
+    subscriptionStatus: null,
+    trialEndsAt: null,
     loading: true,
   })
 
@@ -31,20 +37,29 @@ export function useOrg(): OrgInfo {
 
       const { data: membership } = await supabase
         .from('org_memberships')
-        .select('org_id, role, organization:organizations(name)')
+        .select('org_id, role, organization:organizations(name, plan, subscription_status, trial_ends_at)')
         .eq('user_id', user.id)
         .single()
 
       if (membership) {
+        const org = membership.organization as unknown as {
+          name: string
+          plan: string
+          subscription_status: string
+          trial_ends_at: string
+        } | null
         setInfo({
           orgId: membership.org_id,
           role: membership.role as 'admin' | 'member',
-          orgName: (membership.organization as unknown as { name: string } | null)?.name || null,
+          orgName: org?.name || null,
           userId: user.id,
+          plan: org?.plan || null,
+          subscriptionStatus: org?.subscription_status || null,
+          trialEndsAt: org?.trial_ends_at || null,
           loading: false,
         })
       } else {
-        setInfo({ orgId: null, role: null, orgName: null, userId: user.id, loading: false })
+        setInfo({ orgId: null, role: null, orgName: null, userId: user.id, plan: null, subscriptionStatus: null, trialEndsAt: null, loading: false })
       }
     }
     load()
