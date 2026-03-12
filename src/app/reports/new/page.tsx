@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Header from '@/components/Header'
+import AppShell from '@/components/AppShell'
 import { createClient } from '@/lib/supabase/client'
 import type { Facility } from '@/lib/types'
 
@@ -182,11 +183,11 @@ function NewReportForm() {
 
 export default function NewReportPage() {
   return (
-    <>
+    <AppShell>
       <Header title="日報入力" />
       <Suspense fallback={<p className="text-center py-8 text-gray-400">読み込み中...</p>}>
         <NewReportForm />
       </Suspense>
-    </>
+    </AppShell>
   )
 }

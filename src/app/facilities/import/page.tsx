@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
+import AppShell from '@/components/AppShell'
 import { createClient } from '@/lib/supabase/client'
 import Papa from 'papaparse'
 
@@ -119,7 +120,7 @@ export default function ImportPage() {
   }
 
   return (
-    <>
+    <AppShell>
       <Header title="CSV取り込み" />
       <div className="px-4 py-4 max-w-lg mx-auto">
         <button onClick={() => router.back()} className="text-blue-600 text-sm mb-4">
@@ -202,6 +203,6 @@ export default function ImportPage() {
           </div>
         )}
       </div>
-    </>
+    </AppShell>
   )
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
+import AppShell from '@/components/AppShell'
 import { createClient } from '@/lib/supabase/client'
 import type { Facility, DailyReport } from '@/lib/types'
 
@@ -39,24 +40,24 @@ export default function FacilityDetailPage() {
 
   if (loading) {
     return (
-      <>
+      <AppShell>
         <Header title="施設詳細" />
         <p className="text-center text-gray-400 py-8">読み込み中...</p>
-      </>
+      </AppShell>
     )
   }
 
   if (!facility) {
     return (
-      <>
+      <AppShell>
         <Header title="施設詳細" />
         <p className="text-center text-gray-400 py-8">施設が見つかりません</p>
-      </>
+      </AppShell>
     )
   }
 
   return (
-    <>
+    <AppShell>
       <Header title="施設詳細" />
       <div className="px-4 py-4 max-w-lg mx-auto">
         <button onClick={() => router.back()} className="text-blue-600 text-sm mb-4">
@@ -122,7 +123,7 @@ export default function FacilityDetailPage() {
           </div>
         )}
       </div>
-    </>
+    </AppShell>
   )
 }
 

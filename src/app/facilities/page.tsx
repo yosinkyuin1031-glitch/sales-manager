@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
+import AppShell from '@/components/AppShell'
 import { createClient } from '@/lib/supabase/client'
 import type { Facility } from '@/lib/types'
 
@@ -47,7 +48,7 @@ export default function FacilitiesPage() {
   })
 
   return (
-    <>
+    <AppShell>
       <Header title="施設一覧" />
       <div className="px-4 py-4 max-w-lg mx-auto">
         {/* 検索 */}
@@ -136,6 +137,6 @@ export default function FacilitiesPage() {
           </div>
         )}
       </div>
-    </>
+    </AppShell>
   )
 }

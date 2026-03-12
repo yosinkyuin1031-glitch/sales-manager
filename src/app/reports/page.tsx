@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
+import AppShell from '@/components/AppShell'
 import { createClient } from '@/lib/supabase/client'
 import type { DailyReport } from '@/lib/types'
 
@@ -30,7 +31,7 @@ export default function ReportsPage() {
     : reports
 
   return (
-    <>
+    <AppShell>
       <Header title="日報一覧" />
       <div className="px-4 py-4 max-w-lg mx-auto">
         {/* 日報入力ボタン */}
@@ -70,6 +71,6 @@ export default function ReportsPage() {
           </div>
         )}
       </div>
-    </>
+    </AppShell>
   )
 }

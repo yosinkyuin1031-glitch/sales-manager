@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
+import AppShell from '@/components/AppShell'
 import { createClient } from '@/lib/supabase/client'
 import type { Facility } from '@/lib/types'
 
@@ -64,7 +65,7 @@ export default function RoutesPage() {
   const selectedFacilities = facilities.filter(f => selected.includes(f.id))
 
   return (
-    <>
+    <AppShell>
       <Header title="ルート作成" />
       <div className="px-4 py-4 max-w-lg mx-auto">
         <p className="text-sm text-gray-500 mb-3">
@@ -146,6 +147,6 @@ export default function RoutesPage() {
           </div>
         )}
       </div>
-    </>
+    </AppShell>
   )
 }
