@@ -6,48 +6,58 @@ import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
 import { createClient } from '@/lib/supabase/client'
 import { useOrg } from '@/lib/useOrg'
-import type { DailyReport } from '@/lib/types'
+import type { VisitSchedule, DailyReport } from '@/lib/types'
 
 export default function HomePage() {
   const supabase = createClient()
   const { orgName } = useOrg()
-  const [todayCount, setTodayCount] = useState(0)
-  const [recentReports, setRecentReports] = useState<DailyReport[]>([])
+  const [todaySchedules, setTodaySchedules] = useState<VisitSchedule[]>([])
+  const [lastReports, setLastReports] = useState<Record<string, DailyReport>>({})
   const [userName, setUserName] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setUserName(user.email?.split('@')[0] || '')
-      }
+      if (user) setUserName(user.email?.split('@')[0] || '')
 
       const today = new Date().toISOString().split('T')[0]
 
-      // 今日の訪問数
-      const { count } = await supabase
-        .from('daily_reports')
-        .select('*', { count: 'exact', head: true })
-        .eq('visit_date', today)
+      const { data: schedules } = await supabase
+        .from('visit_schedules')
+        .select('*, facility:facilities(id, name, address, city, business_category, phone, staff_names)')
+        .eq('scheduled_date', today)
         .eq('user_id', user?.id || '')
+        .eq('status', 'pending')
+        .order('created_at')
 
-      setTodayCount(count || 0)
+      setTodaySchedules(schedules || [])
 
-      // 最近の日報
-      const { data: reports } = await supabase
-        .from('daily_reports')
-        .select('*, facility:facilities(name)')
-        .order('created_at', { ascending: false })
-        .limit(5)
+      if (schedules && schedules.length > 0) {
+        const facilityIds = schedules.map((s: VisitSchedule) => s.facility_id)
+        const { data: reports } = await supabase
+          .from('daily_reports')
+          .select('*')
+          .in('facility_id', facilityIds)
+          .order('visit_date', { ascending: false })
 
-      setRecentReports(reports || [])
+        const reportMap: Record<string, DailyReport> = {}
+        if (reports) {
+          for (const r of reports) {
+            if (!reportMap[r.facility_id]) reportMap[r.facility_id] = r
+          }
+        }
+        setLastReports(reportMap)
+      }
+
+      setLoading(false)
     }
     load()
   }, [])
 
   return (
     <AppShell>
-      <Header title="営業管理アプリ" />
+      <Header title="営業管理" />
       <div className="px-4 py-4 max-w-lg mx-auto">
         <div className="flex justify-between items-center mb-4">
           <p className="text-gray-600">こんにちは、{userName}さん</p>
@@ -56,59 +66,97 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* 今日の訪問数 */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
-          <p className="text-sm text-gray-500">今日の訪問数</p>
-          <p className="text-4xl font-bold text-blue-600">{todayCount}<span className="text-lg text-gray-500 ml-1">件</span></p>
+        {/* 今日の訪問リスト */}
+        <div className="bg-white rounded-xl shadow-sm p-5 mb-4">
+          <h2 className="text-lg font-bold text-gray-800 mb-1">本日の訪問リスト</h2>
+          <p className="text-xs text-gray-400 mb-3">{new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}</p>
+
+          {loading ? (
+            <p className="text-gray-400 text-sm py-4 text-center">読み込み中...</p>
+          ) : todaySchedules.length === 0 ? (
+            <p className="text-gray-400 text-sm py-4 text-center">本日の訪問予定はありません</p>
+          ) : (
+            <div className="space-y-3">
+              {todaySchedules.map((schedule, index) => {
+                const facility = schedule.facility as unknown as {
+                  id: string; name: string; address: string; city: string;
+                  business_category: string; phone: string; staff_names: string;
+                }
+                const lastReport = lastReports[schedule.facility_id]
+
+                return (
+                  <div key={schedule.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <span className="bg-blue-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                        {index + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-bold text-gray-800">{facility?.name}</h3>
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                              {facility?.business_category || '未分類'}
+                            </span>
+                          </div>
+                          {facility?.address && (
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.address)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-green-500 text-white text-xs px-2 py-1.5 rounded-lg flex-shrink-0"
+                            >
+                              地図
+                            </a>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{facility?.address}</p>
+                        {facility?.phone && <p className="text-xs text-gray-500">TEL: {facility.phone}</p>}
+                        {facility?.staff_names && <p className="text-xs text-gray-500">担当: {facility.staff_names}</p>}
+
+                        {lastReport ? (
+                          <div className="mt-2 bg-yellow-50 rounded-lg p-3">
+                            <p className="text-xs font-bold text-yellow-700 mb-1">
+                              前回（{lastReport.visit_date}）
+                              {lastReport.atmosphere && (
+                                <span className="ml-1 font-normal">/ 雰囲気: {lastReport.atmosphere}</span>
+                              )}
+                            </p>
+                            <p className="text-xs text-gray-700 line-clamp-3">{lastReport.talk_content}</p>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400 mt-2">初回訪問</p>
+                        )}
+
+                        <Link
+                          href={`/reports/new?facility_id=${schedule.facility_id}&schedule_id=${schedule.id}`}
+                          className="block mt-2 bg-blue-600 text-white text-center py-2 rounded-lg text-sm font-bold"
+                        >
+                          日報を入力
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* クイックアクション */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <Link
-            href="/reports/new"
-            className="bg-blue-600 text-white rounded-xl p-4 text-center font-bold shadow-sm hover:bg-blue-700"
-          >
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <Link href="/reports/new" className="bg-blue-600 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
             📝 日報入力
           </Link>
-          <Link
-            href="/facilities"
-            className="bg-green-600 text-white rounded-xl p-4 text-center font-bold shadow-sm hover:bg-green-700"
-          >
-            🏢 施設一覧
+          <Link href="/facilities" className="bg-green-600 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
+            🏢 事業所一覧
           </Link>
-          <Link
-            href="/routes"
-            className="bg-orange-500 text-white rounded-xl p-4 text-center font-bold shadow-sm hover:bg-orange-600"
-          >
-            🗺️ ルート作成
+          <Link href="/schedules" className="bg-orange-500 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
+            📅 スケジュール管理
           </Link>
-          <Link
-            href="/facilities/import"
-            className="bg-purple-600 text-white rounded-xl p-4 text-center font-bold shadow-sm hover:bg-purple-700"
-          >
+          <Link href="/facilities/import" className="bg-purple-600 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
             📄 CSV取込
           </Link>
         </div>
-
-        {/* 最近の日報 */}
-        <h2 className="text-lg font-bold text-gray-800 mb-3">最近の日報</h2>
-        {recentReports.length === 0 ? (
-          <p className="text-gray-400 text-sm">まだ日報がありません</p>
-        ) : (
-          <div className="space-y-2">
-            {recentReports.map((report) => (
-              <div key={report.id} className="bg-white rounded-lg shadow-sm p-4">
-                <div className="flex justify-between items-start mb-1">
-                  <span className="font-bold text-sm">
-                    {(report.facility as { name: string } | null)?.name || '不明な施設'}
-                  </span>
-                  <span className="text-xs text-gray-400">{report.visit_date}</span>
-                </div>
-                <p className="text-sm text-gray-600 line-clamp-2">{report.talk_content}</p>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </AppShell>
   )

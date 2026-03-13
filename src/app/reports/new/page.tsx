@@ -14,6 +14,7 @@ function NewReportForm() {
   const { orgId } = useOrg()
   const searchParams = useSearchParams()
   const prefillFacilityId = searchParams.get('facility_id')
+  const scheduleId = searchParams.get('schedule_id')
 
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [facilityId, setFacilityId] = useState(prefillFacilityId || '')
@@ -21,6 +22,7 @@ function NewReportForm() {
   const [showDropdown, setShowDropdown] = useState(false)
   const [visitDate, setVisitDate] = useState(new Date().toISOString().split('T')[0])
   const [talkContent, setTalkContent] = useState('')
+  const [atmosphere, setAtmosphere] = useState('')
   const [memo, setMemo] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -72,17 +74,35 @@ function NewReportForm() {
       facility_id: facilityId,
       visit_date: visitDate,
       talk_content: talkContent,
+      atmosphere,
       memo,
       org_id: orgId,
     })
-
-    // 施設の訪問回数と訪問日を更新
-    await supabase.rpc('increment_visit_count', { facility_id_input: facilityId, visit_date_input: visitDate })
 
     if (insertError) {
       setError('保存に失敗しました: ' + insertError.message)
       setSaving(false)
       return
+    }
+
+    // 施設の訪問回数と訪問日を更新
+    await supabase.rpc('increment_visit_count', { facility_id_input: facilityId, visit_date_input: visitDate })
+
+    // 次回訪問を自動スケジュール
+    if (orgId) {
+      await supabase.rpc('auto_schedule_next_visit', {
+        p_org_id: orgId,
+        p_facility_id: facilityId,
+        p_visit_date: visitDate,
+      })
+    }
+
+    // スケジュールのステータスを完了に更新
+    if (scheduleId) {
+      await supabase
+        .from('visit_schedules')
+        .update({ status: 'completed' })
+        .eq('id', scheduleId)
     }
 
     router.push('/reports')
@@ -155,6 +175,22 @@ function NewReportForm() {
             className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base resize-none"
             required
           />
+        </div>
+
+        {/* 雰囲気 */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-1">雰囲気</label>
+          <select
+            value={atmosphere}
+            onChange={(e) => setAtmosphere(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base"
+          >
+            <option value="">選択してください</option>
+            <option value="良好">良好</option>
+            <option value="普通">普通</option>
+            <option value="やや悪い">やや悪い</option>
+            <option value="悪い">悪い</option>
+          </select>
         </div>
 
         {/* メモ */}

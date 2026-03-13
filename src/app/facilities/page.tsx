@@ -13,8 +13,10 @@ export default function FacilitiesPage() {
   const [search, setSearch] = useState('')
   const [filterCity, setFilterCity] = useState('')
   const [filterType, setFilterType] = useState('')
+  const [filterCategory, setFilterCategory] = useState('')
   const [cities, setCities] = useState<string[]>([])
   const [types, setTypes] = useState<string[]>([])
+  const [categories, setCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,8 +32,10 @@ export default function FacilitiesPage() {
       // フィルタ用の選択肢を作成
       const uniqueCities = [...new Set(list.map(f => f.city).filter(Boolean))]
       const uniqueTypes = [...new Set(list.map(f => f.business_type).filter(Boolean))]
+      const uniqueCategories = [...new Set(list.map(f => f.business_category).filter(Boolean))]
       setCities(uniqueCities)
       setTypes(uniqueTypes)
+      setCategories(uniqueCategories)
       setLoading(false)
     }
     load()
@@ -44,12 +48,13 @@ export default function FacilitiesPage() {
       f.city.includes(search)
     const matchCity = !filterCity || f.city === filterCity
     const matchType = !filterType || f.business_type === filterType
-    return matchSearch && matchCity && matchType
+    const matchCategory = !filterCategory || f.business_category === filterCategory
+    return matchSearch && matchCity && matchType && matchCategory
   })
 
   return (
     <AppShell>
-      <Header title="施設一覧" />
+      <Header title="事業所一覧" />
       <div className="px-4 py-4 max-w-lg mx-auto">
         {/* 検索 */}
         <input
@@ -77,6 +82,14 @@ export default function FacilitiesPage() {
           >
             <option value="">全事業種別</option>
             {types.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          >
+            <option value="">全カテゴリ</option>
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
 
@@ -108,9 +121,9 @@ export default function FacilitiesPage() {
                     <h3 className="font-bold text-gray-800">{facility.name}</h3>
                     <p className="text-sm text-gray-500 mt-1">{facility.city} {facility.address}</p>
                     <div className="flex gap-2 mt-2">
-                      {facility.business_type && (
+                      {facility.business_category && (
                         <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                          {facility.business_type}
+                          {facility.business_category}
                         </span>
                       )}
                       {facility.visit_count > 0 && (
