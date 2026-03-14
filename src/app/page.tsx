@@ -156,7 +156,13 @@ export default function HomePage() {
           <Link href="/facilities" className="bg-green-600 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
             🏢 事業所一覧
           </Link>
-          <Link href="/schedules" className="bg-orange-500 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
+          <Link href="/notes" className="bg-yellow-500 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
+            💬 会話・相談共有
+          </Link>
+          <Link href="/reminders" className="bg-orange-500 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
+            ⏰ リマインダー
+          </Link>
+          <Link href="/schedules" className="bg-indigo-600 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
             📅 スケジュール管理
           </Link>
           <Link href="/facilities/import" className="bg-purple-600 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
