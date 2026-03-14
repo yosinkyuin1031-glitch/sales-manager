@@ -30,7 +30,10 @@ export default function SchedulesPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (!orgId) return
+    if (!orgId || orgId === 'demo') {
+      setLoading(false)
+      return
+    }
     const load = async () => {
       const { data: s } = await supabase
         .from('visit_schedules')

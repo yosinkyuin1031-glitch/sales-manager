@@ -19,35 +19,41 @@ export default function HomePage() {
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) setUserName(user.email?.split('@')[0] || '')
+      if (user) {
+        setUserName(user.email?.split('@')[0] || '')
+      } else {
+        setUserName('ゲスト')
+      }
 
       const today = new Date().toISOString().split('T')[0]
 
-      const { data: schedules } = await supabase
-        .from('visit_schedules')
-        .select('*, facility:facilities(id, name, address, city, business_category, phone, staff_names)')
-        .eq('scheduled_date', today)
-        .eq('user_id', user?.id || '')
-        .eq('status', 'pending')
-        .order('created_at')
+      if (user) {
+        const { data: schedules } = await supabase
+          .from('visit_schedules')
+          .select('*, facility:facilities(id, name, address, city, business_category, phone, staff_names)')
+          .eq('scheduled_date', today)
+          .eq('user_id', user.id)
+          .eq('status', 'pending')
+          .order('created_at')
 
-      setTodaySchedules(schedules || [])
+        setTodaySchedules(schedules || [])
 
-      if (schedules && schedules.length > 0) {
-        const facilityIds = schedules.map((s: VisitSchedule) => s.facility_id)
-        const { data: reports } = await supabase
-          .from('daily_reports')
-          .select('*')
-          .in('facility_id', facilityIds)
-          .order('visit_date', { ascending: false })
+        if (schedules && schedules.length > 0) {
+          const facilityIds = schedules.map((s: VisitSchedule) => s.facility_id)
+          const { data: reports } = await supabase
+            .from('daily_reports')
+            .select('*')
+            .in('facility_id', facilityIds)
+            .order('visit_date', { ascending: false })
 
-        const reportMap: Record<string, DailyReport> = {}
-        if (reports) {
-          for (const r of reports) {
-            if (!reportMap[r.facility_id]) reportMap[r.facility_id] = r
+          const reportMap: Record<string, DailyReport> = {}
+          if (reports) {
+            for (const r of reports) {
+              if (!reportMap[r.facility_id]) reportMap[r.facility_id] = r
+            }
           }
+          setLastReports(reportMap)
         }
-        setLastReports(reportMap)
       }
 
       setLoading(false)

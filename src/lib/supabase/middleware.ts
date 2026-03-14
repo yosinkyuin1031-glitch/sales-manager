@@ -1,57 +1,7 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return NextResponse.next({ request })
-  }
-
-  let supabaseResponse = NextResponse.next({ request })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  const pathname = request.nextUrl.pathname
-
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // 未ログイン → ログイン画面へ
-  if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/signup')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
-
-  // ログイン済みだが組織未所属 → セットアップ画面へ
-  if (user && !pathname.startsWith('/login') && !pathname.startsWith('/signup') && !pathname.startsWith('/setup') && !pathname.startsWith('/api/')) {
-    const { data: membership } = await supabase
-      .from('org_memberships')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!membership) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/setup'
-      return NextResponse.redirect(url)
-    }
-  }
-
-  return supabaseResponse
+  // 認証チェック無効化（デモモード）
+  // すべてのページに自由にアクセス可能
+  return NextResponse.next({ request })
 }

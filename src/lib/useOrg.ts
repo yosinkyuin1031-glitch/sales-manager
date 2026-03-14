@@ -30,37 +30,47 @@ export function useOrg(): OrgInfo {
     const supabase = createClient()
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        setInfo(prev => ({ ...prev, loading: false }))
-        return
+
+      if (user) {
+        // ログイン済みの場合は通常通りDBから取得
+        const { data: membership } = await supabase
+          .from('org_memberships')
+          .select('org_id, role, organization:organizations(name, plan, subscription_status, trial_ends_at)')
+          .eq('user_id', user.id)
+          .single()
+
+        if (membership) {
+          const org = membership.organization as unknown as {
+            name: string
+            plan: string
+            subscription_status: string
+            trial_ends_at: string
+          } | null
+          setInfo({
+            orgId: membership.org_id,
+            role: membership.role as 'admin' | 'member',
+            orgName: org?.name || null,
+            userId: user.id,
+            plan: org?.plan || null,
+            subscriptionStatus: org?.subscription_status || null,
+            trialEndsAt: org?.trial_ends_at || null,
+            loading: false,
+          })
+          return
+        }
       }
 
-      const { data: membership } = await supabase
-        .from('org_memberships')
-        .select('org_id, role, organization:organizations(name, plan, subscription_status, trial_ends_at)')
-        .eq('user_id', user.id)
-        .single()
-
-      if (membership) {
-        const org = membership.organization as unknown as {
-          name: string
-          plan: string
-          subscription_status: string
-          trial_ends_at: string
-        } | null
-        setInfo({
-          orgId: membership.org_id,
-          role: membership.role as 'admin' | 'member',
-          orgName: org?.name || null,
-          userId: user.id,
-          plan: org?.plan || null,
-          subscriptionStatus: org?.subscription_status || null,
-          trialEndsAt: org?.trial_ends_at || null,
-          loading: false,
-        })
-      } else {
-        setInfo({ orgId: null, role: null, orgName: null, userId: user.id, plan: null, subscriptionStatus: null, trialEndsAt: null, loading: false })
-      }
+      // 未ログインまたは組織未所属 → デモモード
+      setInfo({
+        orgId: 'demo',
+        role: 'admin',
+        orgName: 'デモ会社',
+        userId: 'demo-user',
+        plan: 'trial',
+        subscriptionStatus: 'trial',
+        trialEndsAt: null,
+        loading: false,
+      })
     }
     load()
   }, [])
