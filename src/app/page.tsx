@@ -109,7 +109,7 @@ export default function HomePage() {
                               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.address)}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="bg-green-500 text-white text-xs px-2 py-1.5 rounded-lg flex-shrink-0"
+                              className="bg-green-500 text-white text-sm px-4 py-2.5 rounded-lg flex-shrink-0 font-bold"
                             >
                               地図
                             </a>

@@ -94,12 +94,20 @@ export default function FacilitiesPage() {
         </div>
 
         {/* アクション */}
-        <Link
-          href="/facilities/import"
-          className="block bg-purple-600 text-white text-center py-3 rounded-lg font-bold mb-4"
-        >
-          📄 CSVから一括登録
-        </Link>
+        <div className="flex gap-2 mb-4">
+          <Link
+            href="/facilities/new"
+            className="flex-1 bg-blue-600 text-white text-center py-3 rounded-lg font-bold"
+          >
+            + 新規事業所登録
+          </Link>
+          <Link
+            href="/facilities/import"
+            className="flex-1 bg-purple-600 text-white text-center py-3 rounded-lg font-bold"
+          >
+            CSV一括登録
+          </Link>
+        </div>
 
         {/* 施設リスト */}
         <p className="text-sm text-gray-500 mb-2">{filtered.length}件の施設</p>
@@ -111,13 +119,15 @@ export default function FacilitiesPage() {
         ) : (
           <div className="space-y-3">
             {filtered.map((facility) => (
-              <Link
+              <div
                 key={facility.id}
-                href={`/facilities/${facility.id}`}
-                className="block bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition"
+                className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition"
               >
                 <div className="flex justify-between items-start">
-                  <div className="flex-1">
+                  <Link
+                    href={`/facilities/${facility.id}`}
+                    className="flex-1 min-w-0"
+                  >
                     <h3 className="font-bold text-gray-800">{facility.name}</h3>
                     <p className="text-sm text-gray-500 mt-1">{facility.city} {facility.address}</p>
                     <div className="flex gap-2 mt-2">
@@ -132,20 +142,19 @@ export default function FacilitiesPage() {
                         </span>
                       )}
                     </div>
-                  </div>
+                  </Link>
                   {facility.address && (
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.address)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="ml-2 bg-green-500 text-white text-xs px-3 py-2 rounded-lg flex-shrink-0"
+                      className="ml-2 bg-green-500 text-white text-sm px-4 py-2.5 rounded-lg flex-shrink-0 font-bold"
                     >
                       地図
                     </a>
                   )}
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}

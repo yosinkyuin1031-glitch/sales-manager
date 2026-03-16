@@ -96,7 +96,9 @@ export default function RoutesPage() {
             </div>
             <button
               onClick={openGoogleMaps}
-              className="w-full bg-green-500 text-white py-3 rounded-lg font-bold"
+              disabled={selected.length === 0}
+              className="w-full bg-green-500 text-white py-3 rounded-lg font-bold
+                disabled:opacity-50 disabled:cursor-not-allowed"
             >
               🗺️ Googleマップで開く
             </button>

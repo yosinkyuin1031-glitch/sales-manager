@@ -17,8 +17,8 @@ export default function FacilityDetailPage() {
   const [facility, setFacility] = useState<Facility | null>(null)
   const [reports, setReports] = useState<DailyReport[]>([])
   const [loading, setLoading] = useState(true)
-  const [editingInterval, setEditingInterval] = useState(false)
-  const [intervalValue, setIntervalValue] = useState('')
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [editValues, setEditValues] = useState<Record<string, string>>({})
   const [assignedUserName, setAssignedUserName] = useState<string | null>(null)
 
   useEffect(() => {
@@ -30,8 +30,20 @@ export default function FacilityDetailPage() {
         .single()
 
       setFacility(f)
-      if (f?.revisit_interval_days) {
-        setIntervalValue(String(f.revisit_interval_days))
+      if (f) {
+        setEditValues({
+          city: f.city || '',
+          address: f.address || '',
+          business_type: f.business_type || '',
+          business_category: f.business_category || '',
+          phone: f.phone || '',
+          staff_names: f.staff_names || '',
+          manager: f.manager || '',
+          newsletter: f.newsletter || '',
+          notes: f.notes || '',
+          rating: String(f.rating || 0),
+          revisit_interval_days: String(f.revisit_interval_days || ''),
+        })
       }
 
       // 担当者名を取得
@@ -87,74 +99,21 @@ export default function FacilityDetailPage() {
           <h2 className="text-xl font-bold text-gray-800 mb-3">{facility.name}</h2>
 
           <div className="space-y-2 text-sm">
-            <InfoRow label="市区町村" value={facility.city} />
-            <InfoRow label="住所" value={facility.address} />
-            <InfoRow label="事業種別" value={facility.business_type} />
-            <InfoRow label="カテゴリ" value={facility.business_category} />
-            <InfoRow label="電話" value={facility.phone} />
-            <InfoRow label="担当者" value={facility.staff_names} />
-            <InfoRow label="管理者" value={facility.manager} />
+            <EditableRow label="市区町村" field="city" value={facility.city} editingField={editingField} editValues={editValues} setEditValues={setEditValues} setEditingField={setEditingField} isAdmin={role === 'admin'} onSave={async (field, val) => { await supabase.from('facilities').update({ [field]: val }).eq('id', facility.id); setFacility({ ...facility, [field]: val }); setEditingField(null); }} />
+            <EditableRow label="住所" field="address" value={facility.address} editingField={editingField} editValues={editValues} setEditValues={setEditValues} setEditingField={setEditingField} isAdmin={role === 'admin'} onSave={async (field, val) => { await supabase.from('facilities').update({ [field]: val }).eq('id', facility.id); setFacility({ ...facility, [field]: val }); setEditingField(null); }} />
+            <EditableRow label="事業種別" field="business_type" value={facility.business_type} editingField={editingField} editValues={editValues} setEditValues={setEditValues} setEditingField={setEditingField} isAdmin={role === 'admin'} onSave={async (field, val) => { await supabase.from('facilities').update({ [field]: val }).eq('id', facility.id); setFacility({ ...facility, [field]: val }); setEditingField(null); }} />
+            <EditableRow label="カテゴリ" field="business_category" value={facility.business_category} editingField={editingField} editValues={editValues} setEditValues={setEditValues} setEditingField={setEditingField} isAdmin={role === 'admin'} onSave={async (field, val) => { await supabase.from('facilities').update({ [field]: val }).eq('id', facility.id); setFacility({ ...facility, [field]: val }); setEditingField(null); }} />
+            <EditableRow label="電話" field="phone" value={facility.phone} editingField={editingField} editValues={editValues} setEditValues={setEditValues} setEditingField={setEditingField} isAdmin={role === 'admin'} onSave={async (field, val) => { await supabase.from('facilities').update({ [field]: val }).eq('id', facility.id); setFacility({ ...facility, [field]: val }); setEditingField(null); }} />
+            <EditableRow label="担当者" field="staff_names" value={facility.staff_names} editingField={editingField} editValues={editValues} setEditValues={setEditValues} setEditingField={setEditingField} isAdmin={role === 'admin'} onSave={async (field, val) => { await supabase.from('facilities').update({ [field]: val }).eq('id', facility.id); setFacility({ ...facility, [field]: val }); setEditingField(null); }} />
+            <EditableRow label="管理者" field="manager" value={facility.manager} editingField={editingField} editValues={editValues} setEditValues={setEditValues} setEditingField={setEditingField} isAdmin={role === 'admin'} onSave={async (field, val) => { await supabase.from('facilities').update({ [field]: val }).eq('id', facility.id); setFacility({ ...facility, [field]: val }); setEditingField(null); }} />
             <InfoRow label="訪問日" value={facility.visit_date || '未訪問'} />
             <InfoRow label="訪問回数" value={`${facility.visit_count}回`} />
-            <InfoRow label="評価" value={facility.rating ? `${'★'.repeat(facility.rating)}${'☆'.repeat(5 - facility.rating)}` : '未評価'} />
-            <InfoRow label="通信" value={facility.newsletter} />
+            <EditableRow label="評価" field="rating" value={facility.rating ? `${'★'.repeat(facility.rating)}${'☆'.repeat(5 - facility.rating)}` : '未評価'} editingField={editingField} editValues={editValues} setEditValues={setEditValues} setEditingField={setEditingField} isAdmin={role === 'admin'} inputType="select" selectOptions={[{v:'0',l:'未評価'},{v:'1',l:'★'},{v:'2',l:'★★'},{v:'3',l:'★★★'},{v:'4',l:'★★★★'},{v:'5',l:'★★★★★'}]} onSave={async (field, val) => { const num = parseInt(val); await supabase.from('facilities').update({ rating: num }).eq('id', facility.id); setFacility({ ...facility, rating: num }); setEditingField(null); }} />
+            <EditableRow label="通信" field="newsletter" value={facility.newsletter} editingField={editingField} editValues={editValues} setEditValues={setEditValues} setEditingField={setEditingField} isAdmin={role === 'admin'} onSave={async (field, val) => { await supabase.from('facilities').update({ [field]: val }).eq('id', facility.id); setFacility({ ...facility, [field]: val }); setEditingField(null); }} />
             <InfoRow label="担当者ID" value={assignedUserName || (facility.assigned_user_id ? facility.assigned_user_id : '')} />
             <InfoRow label="次回訪問" value={facility.next_visit_date || '未定'} />
-            {/* 再訪問間隔 */}
-            <div className="flex">
-              <span className="text-gray-500 w-20 flex-shrink-0">再訪間隔</span>
-              {editingInterval ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    value={intervalValue}
-                    onChange={(e) => setIntervalValue(e.target.value)}
-                    className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                    min="1"
-                  />
-                  <span className="text-sm text-gray-600">日</span>
-                  <button
-                    onClick={async () => {
-                      const days = parseInt(intervalValue)
-                      if (!days || days < 1) return
-                      await supabase
-                        .from('facilities')
-                        .update({ revisit_interval_days: days })
-                        .eq('id', facility.id)
-                      setFacility({ ...facility, revisit_interval_days: days })
-                      setEditingInterval(false)
-                    }}
-                    className="text-xs bg-blue-600 text-white px-2 py-1 rounded"
-                  >
-                    保存
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIntervalValue(String(facility.revisit_interval_days || ''))
-                      setEditingInterval(false)
-                    }}
-                    className="text-xs text-gray-500"
-                  >
-                    取消
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-800">
-                    {facility.revisit_interval_days ? `${facility.revisit_interval_days}日` : '未設定'}
-                  </span>
-                  {role === 'admin' && (
-                    <button
-                      onClick={() => setEditingInterval(true)}
-                      className="text-xs text-blue-600 underline"
-                    >
-                      編集
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-            {facility.notes && <InfoRow label="備考" value={facility.notes} />}
+            <EditableRow label="再訪間隔" field="revisit_interval_days" value={facility.revisit_interval_days ? `${facility.revisit_interval_days}日` : '未設定'} editingField={editingField} editValues={editValues} setEditValues={setEditValues} setEditingField={setEditingField} isAdmin={role === 'admin'} inputType="number" suffix="日" onSave={async (field, val) => { const days = parseInt(val); if (!days || days < 1) return; await supabase.from('facilities').update({ revisit_interval_days: days }).eq('id', facility.id); setFacility({ ...facility, revisit_interval_days: days }); setEditingField(null); }} />
+            <EditableRow label="備考" field="notes" value={facility.notes} editingField={editingField} editValues={editValues} setEditValues={setEditValues} setEditingField={setEditingField} isAdmin={role === 'admin'} onSave={async (field, val) => { await supabase.from('facilities').update({ [field]: val }).eq('id', facility.id); setFacility({ ...facility, [field]: val }); setEditingField(null); }} />
           </div>
 
           {/* Googleマップボタン */}
@@ -213,6 +172,79 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     <div className="flex">
       <span className="text-gray-500 w-20 flex-shrink-0">{label}</span>
       <span className="text-gray-800">{value}</span>
+    </div>
+  )
+}
+
+function EditableRow({
+  label, field, value, editingField, editValues, setEditValues, setEditingField, isAdmin, onSave,
+  inputType = 'text', suffix, selectOptions,
+}: {
+  label: string; field: string; value: string; editingField: string | null;
+  editValues: Record<string, string>; setEditValues: (v: Record<string, string>) => void;
+  setEditingField: (f: string | null) => void; isAdmin: boolean;
+  onSave: (field: string, value: string) => Promise<void>;
+  inputType?: 'text' | 'number' | 'select'; suffix?: string;
+  selectOptions?: { v: string; l: string }[];
+}) {
+  const isEditing = editingField === field
+
+  if (isEditing) {
+    return (
+      <div className="flex items-start">
+        <span className="text-gray-500 w-20 flex-shrink-0 pt-1">{label}</span>
+        <div className="flex items-center gap-2 flex-1">
+          {inputType === 'select' && selectOptions ? (
+            <select
+              value={editValues[field] || ''}
+              onChange={(e) => setEditValues({ ...editValues, [field]: e.target.value })}
+              className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+            >
+              {selectOptions.map((o) => (
+                <option key={o.v} value={o.v}>{o.l}</option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type={inputType}
+              value={editValues[field] || ''}
+              onChange={(e) => setEditValues({ ...editValues, [field]: e.target.value })}
+              className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+              min={inputType === 'number' ? '1' : undefined}
+            />
+          )}
+          {suffix && <span className="text-sm text-gray-600">{suffix}</span>}
+          <button
+            onClick={() => onSave(field, editValues[field] || '')}
+            className="text-xs bg-blue-600 text-white px-2 py-1 rounded flex-shrink-0"
+          >
+            保存
+          </button>
+          <button
+            onClick={() => setEditingField(null)}
+            className="text-xs text-gray-500 flex-shrink-0"
+          >
+            取消
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex">
+      <span className="text-gray-500 w-20 flex-shrink-0">{label}</span>
+      <div className="flex items-center gap-2">
+        <span className="text-gray-800">{value || '未設定'}</span>
+        {isAdmin && (
+          <button
+            onClick={() => setEditingField(field)}
+            className="text-xs text-blue-600 underline flex-shrink-0"
+          >
+            編集
+          </button>
+        )}
+      </div>
     </div>
   )
 }

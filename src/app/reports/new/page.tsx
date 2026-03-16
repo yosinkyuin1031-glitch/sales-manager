@@ -132,7 +132,7 @@ function NewReportForm() {
             className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base"
           />
           {showDropdown && facilitySearch && (
-            <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+            <div className="absolute z-50 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
               {filteredFacilities.length === 0 ? (
                 <p className="p-3 text-gray-400 text-sm">該当する施設がありません</p>
               ) : (
