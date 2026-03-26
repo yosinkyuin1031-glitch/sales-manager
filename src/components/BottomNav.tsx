@@ -6,8 +6,8 @@ import { usePathname } from 'next/navigation'
 const navItems = [
   { href: '/', label: 'ホーム', icon: '🏠' },
   { href: '/facilities', label: '事業所', icon: '🏢' },
-  { href: '/notes', label: '共有', icon: '💬' },
-  { href: '/reminders', label: 'リマインダー', icon: '⏰' },
+  { href: '/pipeline', label: '商談', icon: '📊' },
+  { href: '/sales-forecast', label: '売上', icon: '📈' },
   { href: '/reports', label: '日報', icon: '📝' },
 ]
 

@@ -6,15 +6,16 @@ import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
 import { createClient } from '@/lib/supabase/client'
 import { useOrg } from '@/lib/useOrg'
-import type { VisitSchedule, DailyReport } from '@/lib/types'
+import type { VisitSchedule, DailyReport, Deal } from '@/lib/types'
 
 export default function HomePage() {
   const supabase = createClient()
-  const { orgName } = useOrg()
+  const { orgName, orgId } = useOrg()
   const [todaySchedules, setTodaySchedules] = useState<VisitSchedule[]>([])
   const [lastReports, setLastReports] = useState<Record<string, DailyReport>>({})
   const [userName, setUserName] = useState('')
   const [loading, setLoading] = useState(true)
+  const [followUpDeals, setFollowUpDeals] = useState<Deal[]>([])
 
   useEffect(() => {
     const load = async () => {
@@ -56,10 +57,26 @@ export default function HomePage() {
         }
       }
 
+      // フォローアップが近い商談を取得
+      if (orgId) {
+        const threeDaysLater = new Date()
+        threeDaysLater.setDate(threeDaysLater.getDate() + 3)
+        const { data: followUps } = await supabase
+          .from('deals')
+          .select('*')
+          .eq('org_id', orgId)
+          .not('status', 'in', '("won","lost")')
+          .not('follow_up_date', 'is', null)
+          .lte('follow_up_date', threeDaysLater.toISOString().split('T')[0])
+          .order('follow_up_date')
+          .limit(10)
+        setFollowUpDeals(followUps || [])
+      }
+
       setLoading(false)
     }
     load()
-  }, [])
+  }, [orgId])
 
   return (
     <AppShell>
@@ -71,6 +88,41 @@ export default function HomePage() {
             <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">{orgName}</span>
           )}
         </div>
+
+        {/* フォローアップアラート */}
+        {followUpDeals.length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-bold text-red-700">フォローアップが必要な商談</h2>
+              <Link href="/pipeline" className="text-xs text-red-600 underline">全て見る</Link>
+            </div>
+            <div className="space-y-2">
+              {followUpDeals.slice(0, 5).map((deal) => {
+                const today = new Date().toISOString().split('T')[0]
+                const isOverdue = deal.follow_up_date && deal.follow_up_date < today
+                return (
+                  <div key={deal.id} className={`bg-white rounded-lg p-3 ${isOverdue ? 'border-l-4 border-red-500' : 'border-l-4 border-yellow-400'}`}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-bold text-sm text-gray-800">{deal.deal_name}</p>
+                        <p className="text-xs text-gray-500">{deal.facility_name}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-xs font-bold ${isOverdue ? 'text-red-600' : 'text-yellow-600'}`}>
+                          {isOverdue ? '期限超過' : 'まもなく期限'}
+                        </p>
+                        <p className="text-xs text-gray-400">{deal.follow_up_date}</p>
+                      </div>
+                    </div>
+                    {deal.amount > 0 && (
+                      <p className="text-xs text-green-600 font-bold mt-1">{deal.amount.toLocaleString()}円</p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* 今日の訪問リスト */}
         <div className="bg-white rounded-xl shadow-sm p-5 mb-4">
@@ -155,6 +207,12 @@ export default function HomePage() {
           </Link>
           <Link href="/facilities" className="bg-green-600 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
             🏢 事業所一覧
+          </Link>
+          <Link href="/pipeline" className="bg-teal-600 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
+            📊 商談パイプライン
+          </Link>
+          <Link href="/sales-forecast" className="bg-cyan-600 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
+            📈 売上予測
           </Link>
           <Link href="/notes" className="bg-yellow-500 text-white rounded-xl p-4 text-center font-bold shadow-sm text-sm">
             💬 会話・相談共有
