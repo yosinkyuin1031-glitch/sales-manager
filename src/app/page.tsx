@@ -130,7 +130,22 @@ export default function HomePage() {
           <p className="text-xs text-gray-400 mb-3">{new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}</p>
 
           {loading ? (
-            <p className="text-gray-400 text-sm py-4 text-center">読み込み中...</p>
+            <div className="space-y-3 py-2" role="status" aria-label="訪問リスト読み込み中">
+              {[1, 2].map(i => (
+                <div key={i} className="border border-gray-200 rounded-lg p-4 animate-pulse">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-gray-200 w-7 h-7 rounded-full flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="bg-gray-200 rounded h-5 w-1/2 mb-2" />
+                      <div className="bg-gray-200 rounded h-3 w-1/3 mb-2" />
+                      <div className="bg-gray-200 rounded h-3 w-full mb-2" />
+                      <div className="bg-gray-200 rounded h-9 w-full mt-2" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <span className="sr-only">読み込み中</span>
+            </div>
           ) : todaySchedules.length === 0 ? (
             <p className="text-gray-400 text-sm py-4 text-center">本日の訪問予定はありません</p>
           ) : (
@@ -162,6 +177,7 @@ export default function HomePage() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="bg-green-500 text-white text-sm px-4 py-2.5 rounded-lg flex-shrink-0 font-bold"
+                              aria-label={`${facility.name}の地図を開く`}
                             >
                               地図
                             </a>

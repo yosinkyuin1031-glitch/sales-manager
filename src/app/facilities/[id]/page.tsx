@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
+import { SkeletonPage } from '@/components/Skeleton'
 import { createClient } from '@/lib/supabase/client'
 import { useOrg } from '@/lib/useOrg'
 import type { Facility, DailyReport } from '@/lib/types'
@@ -72,7 +73,7 @@ export default function FacilityDetailPage() {
     return (
       <AppShell>
         <Header title="事業所詳細" />
-        <p className="text-center text-gray-400 py-8">読み込み中...</p>
+        <SkeletonPage lines={6} />
       </AppShell>
     )
   }

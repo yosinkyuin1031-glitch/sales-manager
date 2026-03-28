@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
+import { SkeletonChart } from '@/components/Skeleton'
 import { createClient } from '@/lib/supabase/client'
 import { useOrg } from '@/lib/useOrg'
 import type { Deal, SalesTarget } from '@/lib/types'
@@ -184,6 +185,7 @@ export default function SalesForecastPage() {
             <button
               onClick={() => setSelectedYear(y => y - 1)}
               className="bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm"
+              aria-label="前の年に移動"
             >
               ←
             </button>
@@ -191,6 +193,7 @@ export default function SalesForecastPage() {
             <button
               onClick={() => setSelectedYear(y => y + 1)}
               className="bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm"
+              aria-label="次の年に移動"
             >
               →
             </button>
@@ -243,7 +246,7 @@ export default function SalesForecastPage() {
 
         {/* グラフ */}
         {loading ? (
-          <p className="text-gray-400 text-center py-8">読み込み中...</p>
+          <SkeletonChart />
         ) : (
           <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
             <h3 className="font-bold text-sm text-gray-700 mb-3">月別 目標 vs 実績</h3>

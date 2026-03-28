@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
+import { SkeletonList } from '@/components/Skeleton'
+import ConfirmModal from '@/components/ConfirmModal'
 import { createClient } from '@/lib/supabase/client'
 import { useOrg } from '@/lib/useOrg'
 import type { Deal, DealStatus } from '@/lib/types'
@@ -31,8 +33,8 @@ function DealCard({ deal, onEdit, onDelete }: { deal: Deal; onEdit: (d: Deal) =>
       <div className="flex justify-between items-start">
         <h4 className="font-bold text-sm text-gray-800 flex-1">{deal.deal_name}</h4>
         <div className="flex gap-1 ml-1">
-          <button onClick={() => onEdit(deal)} className="text-xs text-blue-600 px-1">編集</button>
-          <button onClick={() => onDelete(deal.id)} className="text-xs text-red-400 px-1">✕</button>
+          <button onClick={() => onEdit(deal)} className="text-xs text-blue-600 px-1" aria-label={`${deal.deal_name}を編集`}>編集</button>
+          <button onClick={() => onDelete(deal.id)} className="text-xs text-red-400 px-1" aria-label={`${deal.deal_name}を削除`}>✕</button>
         </div>
       </div>
       <p className="text-xs text-gray-500 mt-1">{deal.facility_name}</p>
@@ -116,6 +118,8 @@ export default function PipelinePage() {
   const [showForm, setShowForm] = useState(false)
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null)
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [formTouched, setFormTouched] = useState<Record<string, boolean>>({})
 
   // フォームstate
   const [form, setForm] = useState({
@@ -162,6 +166,7 @@ export default function PipelinePage() {
       notes: '',
     })
     setEditingDeal(null)
+    setFormTouched({})
   }
 
   const handleSubmit = async () => {
@@ -206,10 +211,15 @@ export default function PipelinePage() {
     setShowForm(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('この商談を削除しますか？')) return
-    await supabase.from('deals').delete().eq('id', id)
-    setDeals(deals.filter(d => d.id !== id))
+  const handleDelete = (id: string) => {
+    setDeleteTarget(id)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    await supabase.from('deals').delete().eq('id', deleteTarget)
+    setDeals(deals.filter(d => d.id !== deleteTarget))
+    setDeleteTarget(null)
   }
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -307,9 +317,19 @@ export default function PipelinePage() {
                 type="text"
                 value={form.deal_name}
                 onChange={(e) => setForm({ ...form, deal_name: e.target.value })}
+                onBlur={() => setFormTouched(prev => ({ ...prev, deal_name: true }))}
                 placeholder="例: A病院との契約交渉"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className={`w-full px-3 py-2 border rounded-lg text-sm ${
+                  formTouched.deal_name && !form.deal_name.trim()
+                    ? 'border-red-400'
+                    : 'border-gray-300'
+                }`}
+                aria-required="true"
+                aria-invalid={formTouched.deal_name && !form.deal_name.trim() ? 'true' : undefined}
               />
+              {formTouched.deal_name && !form.deal_name.trim() && (
+                <p className="text-red-500 text-xs mt-1" role="alert">商談名は必須です</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -404,7 +424,7 @@ export default function PipelinePage() {
 
         {/* かんばんボード */}
         {loading ? (
-          <p className="text-gray-400 text-center py-8">読み込み中...</p>
+          <div className="max-w-lg mx-auto"><SkeletonList count={3} lines={2} /></div>
         ) : (
           <DndContext
             sensors={sensors}
@@ -471,6 +491,16 @@ export default function PipelinePage() {
             </div>
           </div>
         )}
+        <ConfirmModal
+          open={deleteTarget !== null}
+          title="商談の削除"
+          message="この商談を削除しますか？この操作は元に戻せません。"
+          confirmLabel="削除する"
+          cancelLabel="キャンセル"
+          variant="danger"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
       </div>
     </AppShell>
   )

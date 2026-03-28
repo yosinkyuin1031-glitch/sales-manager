@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "営業管理アプリ",
@@ -20,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className="antialiased bg-gray-50 min-h-screen">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

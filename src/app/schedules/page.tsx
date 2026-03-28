@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
+import { SkeletonList } from '@/components/Skeleton'
+import ConfirmModal from '@/components/ConfirmModal'
 import { createClient } from '@/lib/supabase/client'
 import { useOrg } from '@/lib/useOrg'
 import type { Facility, VisitSchedule } from '@/lib/types'
@@ -28,6 +30,7 @@ export default function SchedulesPage() {
   const [addUserId, setAddUserId] = useState('')
   const [addDate, setAddDate] = useState(new Date().toISOString().split('T')[0])
   const [saving, setSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   useEffect(() => {
     if (!orgId || orgId === 'demo') {
@@ -82,9 +85,15 @@ export default function SchedulesPage() {
     setSaving(false)
   }
 
-  const handleDelete = async (id: string) => {
-    await supabase.from('visit_schedules').delete().eq('id', id)
-    setSchedules(schedules.filter(s => s.id !== id))
+  const handleDelete = (id: string) => {
+    setDeleteTarget(id)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    await supabase.from('visit_schedules').delete().eq('id', deleteTarget)
+    setSchedules(schedules.filter(s => s.id !== deleteTarget))
+    setDeleteTarget(null)
   }
 
   const filtered = filterUser
@@ -112,11 +121,13 @@ export default function SchedulesPage() {
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            aria-label="開始日で絞り込み"
           />
           <select
             value={filterUser}
             onChange={(e) => setFilterUser(e.target.value)}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            aria-label="担当者で絞り込み"
           >
             <option value="">全担当者</option>
             {members.map(m => (
@@ -180,7 +191,7 @@ export default function SchedulesPage() {
 
         {/* スケジュール一覧 */}
         {loading ? (
-          <p className="text-gray-400 text-center py-8">読み込み中...</p>
+          <SkeletonList count={3} lines={2} />
         ) : Object.keys(grouped).length === 0 ? (
           <p className="text-gray-400 text-center py-8">スケジュールがありません</p>
         ) : (
@@ -216,6 +227,7 @@ export default function SchedulesPage() {
                           <button
                             onClick={() => handleDelete(schedule.id)}
                             className="text-xs text-red-400 px-1"
+                            aria-label={`${facility?.name}のスケジュールを削除`}
                           >
                             ✕
                           </button>
@@ -228,6 +240,16 @@ export default function SchedulesPage() {
             </div>
           ))
         )}
+        <ConfirmModal
+          open={deleteTarget !== null}
+          title="スケジュールの削除"
+          message="この訪問スケジュールを削除しますか？"
+          confirmLabel="削除する"
+          cancelLabel="キャンセル"
+          variant="danger"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
       </div>
     </AppShell>
   )

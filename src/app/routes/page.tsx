@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
+import { SkeletonList } from '@/components/Skeleton'
 import { createClient } from '@/lib/supabase/client'
 import type { Facility } from '@/lib/types'
 
@@ -112,11 +113,12 @@ export default function RoutesPage() {
           onChange={(e) => setSearch(e.target.value)}
           placeholder="施設名・住所で検索..."
           className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-3 text-base"
+          aria-label="施設名・住所で検索"
         />
 
         {/* 施設リスト */}
         {loading ? (
-          <p className="text-gray-400 text-center py-8">読み込み中...</p>
+          <SkeletonList count={4} lines={1} />
         ) : (
           <div className="space-y-2">
             {filtered.map((facility) => {

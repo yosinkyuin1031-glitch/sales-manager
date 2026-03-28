@@ -31,6 +31,7 @@ export default function NewFacilityPage() {
   const { orgId } = useOrg()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
 
   const [form, setForm] = useState({
     name: '',
@@ -95,9 +96,19 @@ export default function NewFacilityPage() {
                   type="text"
                   value={form.name}
                   onChange={(e) => update('name', e.target.value)}
+                  onBlur={() => setTouched(prev => ({ ...prev, name: true }))}
                   placeholder="例: さんSUNケアプランセンター"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base"
+                  className={`w-full px-3 py-2 border rounded-lg text-base ${
+                    touched.name && !form.name.trim()
+                      ? 'border-red-400 focus:ring-red-400'
+                      : 'border-gray-300'
+                  }`}
+                  aria-required="true"
+                  aria-invalid={touched.name && !form.name.trim() ? 'true' : undefined}
                 />
+                {touched.name && !form.name.trim() && (
+                  <p className="text-red-500 text-xs mt-1" role="alert">施設名は必須です</p>
+                )}
               </div>
 
               <div>

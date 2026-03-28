@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
+import { SkeletonList } from '@/components/Skeleton'
+import ConfirmModal from '@/components/ConfirmModal'
+import { useToast } from '@/components/Toast'
 import { createClient } from '@/lib/supabase/client'
 
 interface SharedNote {
@@ -24,10 +27,12 @@ const NOTE_TYPES = [
 
 export default function NotesPage() {
   const supabase = createClient()
+  const { showToast } = useToast()
   const [notes, setNotes] = useState<SharedNote[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [filterType, setFilterType] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   // 入力フォーム
   const [content, setContent] = useState('')
@@ -63,7 +68,7 @@ export default function NotesPage() {
     })
 
     if (error) {
-      alert('保存エラー: ' + error.message)
+      showToast('保存エラー: ' + error.message, 'error')
     } else {
       setContent('')
       setFacilityName('')
@@ -74,10 +79,15 @@ export default function NotesPage() {
     setSaving(false)
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('この投稿を削除しますか？')) return
-    await supabase.from('shared_notes').delete().eq('id', id)
-    setNotes(notes.filter(n => n.id !== id))
+  function handleDelete(id: string) {
+    setDeleteTarget(id)
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    await supabase.from('shared_notes').delete().eq('id', deleteTarget)
+    setNotes(notes.filter(n => n.id !== deleteTarget))
+    setDeleteTarget(null)
   }
 
   const filtered = filterType
@@ -189,7 +199,7 @@ export default function NotesPage() {
 
         {/* 投稿一覧 */}
         {loading ? (
-          <p className="text-gray-400 text-center py-8">読み込み中...</p>
+          <SkeletonList count={3} lines={3} />
         ) : filtered.length === 0 ? (
           <p className="text-gray-400 text-center py-8">投稿がありません</p>
         ) : (
@@ -213,6 +223,7 @@ export default function NotesPage() {
                     <button
                       onClick={() => handleDelete(note.id)}
                       className="text-gray-300 hover:text-red-500 text-xs"
+                      aria-label="この投稿を削除"
                     >
                       ✕
                     </button>
@@ -234,6 +245,16 @@ export default function NotesPage() {
             })}
           </div>
         )}
+        <ConfirmModal
+          open={deleteTarget !== null}
+          title="投稿の削除"
+          message="この投稿を削除しますか？この操作は元に戻せません。"
+          confirmLabel="削除する"
+          cancelLabel="キャンセル"
+          variant="danger"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
       </div>
     </AppShell>
   )

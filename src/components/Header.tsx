@@ -19,6 +19,7 @@ export default function Header({ title }: { title: string }) {
       <button
         onClick={handleLogout}
         className="text-sm bg-blue-700 hover:bg-blue-800 px-3 py-1 rounded"
+        aria-label="ログアウト"
       >
         ログアウト
       </button>

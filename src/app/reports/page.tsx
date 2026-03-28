@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
+import { SkeletonList } from '@/components/Skeleton'
 import { createClient } from '@/lib/supabase/client'
 import type { DailyReport } from '@/lib/types'
 
@@ -45,7 +46,7 @@ export default function ReportsPage() {
         <p className="text-sm text-gray-500 mb-2">{filtered.length}件の日報</p>
 
         {loading ? (
-          <p className="text-gray-400 text-center py-8">読み込み中...</p>
+          <SkeletonList count={4} lines={2} />
         ) : filtered.length === 0 ? (
           <p className="text-gray-400 text-center py-8">日報がありません</p>
         ) : (

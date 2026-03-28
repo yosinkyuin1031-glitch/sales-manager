@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
+import { SkeletonList } from '@/components/Skeleton'
 import { createClient } from '@/lib/supabase/client'
 import type { Facility } from '@/lib/types'
 
@@ -63,6 +64,7 @@ export default function FacilitiesPage() {
           onChange={(e) => setSearch(e.target.value)}
           placeholder="施設名・住所で検索..."
           className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-3 text-base"
+          aria-label="施設名・住所で検索"
         />
 
         {/* フィルタ */}
@@ -71,6 +73,7 @@ export default function FacilitiesPage() {
             value={filterCity}
             onChange={(e) => setFilterCity(e.target.value)}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            aria-label="エリアで絞り込み"
           >
             <option value="">全エリア</option>
             {cities.map(c => <option key={c} value={c}>{c}</option>)}
@@ -79,6 +82,7 @@ export default function FacilitiesPage() {
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            aria-label="事業種別で絞り込み"
           >
             <option value="">全事業種別</option>
             {types.map(t => <option key={t} value={t}>{t}</option>)}
@@ -87,6 +91,7 @@ export default function FacilitiesPage() {
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            aria-label="カテゴリで絞り込み"
           >
             <option value="">全カテゴリ</option>
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -113,7 +118,7 @@ export default function FacilitiesPage() {
         <p className="text-sm text-gray-500 mb-2">{filtered.length}件の施設</p>
 
         {loading ? (
-          <p className="text-gray-400 text-center py-8">読み込み中...</p>
+          <SkeletonList count={4} lines={2} />
         ) : filtered.length === 0 ? (
           <p className="text-gray-400 text-center py-8">施設がありません</p>
         ) : (

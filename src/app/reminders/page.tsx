@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
+import { SkeletonList } from '@/components/Skeleton'
+import ConfirmModal from '@/components/ConfirmModal'
+import { useToast } from '@/components/Toast'
 import { createClient } from '@/lib/supabase/client'
 
 interface Reminder {
@@ -27,10 +30,12 @@ const PRIORITIES = [
 
 export default function RemindersPage() {
   const supabase = createClient()
+  const { showToast } = useToast()
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [showDone, setShowDone] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   // 入力フォーム
   const [title, setTitle] = useState('')
@@ -77,7 +82,7 @@ export default function RemindersPage() {
     })
 
     if (error) {
-      alert('保存エラー: ' + error.message)
+      showToast('保存エラー: ' + error.message, 'error')
     } else {
       setTitle('')
       setMemo('')
@@ -94,10 +99,15 @@ export default function RemindersPage() {
     loadReminders()
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('このリマインダーを削除しますか？')) return
-    await supabase.from('reminders').delete().eq('id', id)
-    setReminders(reminders.filter(r => r.id !== id))
+  function handleDelete(id: string) {
+    setDeleteTarget(id)
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    await supabase.from('reminders').delete().eq('id', deleteTarget)
+    setReminders(reminders.filter(r => r.id !== deleteTarget))
+    setDeleteTarget(null)
   }
 
   const today = new Date().toISOString().split('T')[0]
@@ -122,6 +132,7 @@ export default function RemindersPage() {
               ${reminder.is_done
                 ? 'bg-green-500 border-green-500 text-white'
                 : 'border-gray-300 hover:border-blue-500'}`}
+            aria-label={reminder.is_done ? `${reminder.title}を未完了に戻す` : `${reminder.title}を完了にする`}
           >
             {reminder.is_done ? '✓' : ''}
           </button>
@@ -144,6 +155,7 @@ export default function RemindersPage() {
               <button
                 onClick={() => handleDelete(reminder.id)}
                 className="text-gray-300 hover:text-red-500 text-xs"
+                aria-label={`${reminder.title}を削除`}
               >
                 ✕
               </button>
@@ -288,7 +300,7 @@ export default function RemindersPage() {
         </button>
 
         {loading ? (
-          <p className="text-gray-400 text-center py-8">読み込み中...</p>
+          <SkeletonList count={3} lines={2} />
         ) : reminders.length === 0 ? (
           <p className="text-gray-400 text-center py-8">リマインダーがありません</p>
         ) : (
@@ -334,6 +346,17 @@ export default function RemindersPage() {
             )}
           </div>
         )}
+
+        <ConfirmModal
+          open={deleteTarget !== null}
+          title="リマインダーの削除"
+          message="このリマインダーを削除しますか？"
+          confirmLabel="削除する"
+          cancelLabel="キャンセル"
+          variant="danger"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
       </div>
     </AppShell>
   )

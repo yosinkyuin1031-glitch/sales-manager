@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
+import { SkeletonPage } from '@/components/Skeleton'
 import { createClient } from '@/lib/supabase/client'
 import { useOrg } from '@/lib/useOrg'
 import type { Facility } from '@/lib/types'
@@ -224,7 +225,7 @@ export default function NewReportPage() {
   return (
     <AppShell>
       <Header title="日報入力" />
-      <Suspense fallback={<p className="text-center py-8 text-gray-400">読み込み中...</p>}>
+      <Suspense fallback={<SkeletonPage lines={5} />}>
         <NewReportForm />
       </Suspense>
     </AppShell>

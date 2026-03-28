@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import Header from '@/components/Header'
 import AppShell from '@/components/AppShell'
+import { SkeletonPage } from '@/components/Skeleton'
+import { SkeletonLine } from '@/components/Skeleton'
+import { useToast } from '@/components/Toast'
 import { createClient } from '@/lib/supabase/client'
 import { useOrg } from '@/lib/useOrg'
 
@@ -18,6 +21,7 @@ function SettingsContent() {
   const supabase = createClient()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { showToast } = useToast()
   const { orgId, orgName, role, subscriptionStatus, trialEndsAt } = useOrg()
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
@@ -73,7 +77,7 @@ function SettingsContent() {
     if (data.url) {
       window.location.href = data.url
     } else {
-      alert(data.error || 'エラーが発生しました')
+      showToast(data.error || 'エラーが発生しました', 'error')
       setCheckoutLoading(false)
     }
   }
@@ -85,7 +89,7 @@ function SettingsContent() {
     if (data.url) {
       window.location.href = data.url
     } else {
-      alert(data.error || 'エラーが発生しました')
+      showToast(data.error || 'エラーが発生しました', 'error')
       setPortalLoading(false)
     }
   }
@@ -169,7 +173,15 @@ function SettingsContent() {
       <div className="bg-white rounded-xl shadow-sm p-5 mb-4">
         <h2 className="text-lg font-bold mb-3">メンバー一覧</h2>
         {loading ? (
-          <p className="text-gray-400 text-sm">読み込み中...</p>
+          <div className="space-y-2 animate-pulse" role="status" aria-label="メンバー読み込み中">
+            {[1, 2].map(i => (
+              <div key={i} className="flex justify-between items-center py-2 border-b">
+                <SkeletonLine className="h-4 w-24" />
+                <SkeletonLine className="h-5 w-16 rounded-full" />
+              </div>
+            ))}
+            <span className="sr-only">読み込み中</span>
+          </div>
         ) : (
           <div className="space-y-2">
             {members.map((member) => (
@@ -195,7 +207,7 @@ export default function SettingsPage() {
   return (
     <AppShell>
       <Header title="設定" />
-      <Suspense fallback={<p className="text-center py-8 text-gray-400">読み込み中...</p>}>
+      <Suspense fallback={<SkeletonPage lines={4} />}>
         <SettingsContent />
       </Suspense>
     </AppShell>
